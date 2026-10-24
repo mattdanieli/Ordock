@@ -1,0 +1,115 @@
+<!-- ===== SCHEDA APP / APP CARD: RIORDINA DOCK — Bold Builder > "Raw HTML" ===== -->
+<style>
+.rd-card{--rd-bg:#1c1631;--rd-bg2:#2a1f4a;--rd-text:#f4f1fb;--rd-muted:#b9b0d4;--rd-accent:#a259ff;--rd-line:rgba(255,255,255,.12);
+  position:relative;max-width:880px;margin:32px auto;padding:36px;border-radius:24px;box-sizing:border-box;
+  background:linear-gradient(160deg,var(--rd-bg2),var(--rd-bg));color:var(--rd-text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55;
+  box-shadow:0 20px 50px rgba(20,10,50,.35)}
+.rd-card *{box-sizing:border-box}
+.rd-lang{position:absolute;top:18px;right:18px;display:flex;border:1px solid var(--rd-line);border-radius:999px;overflow:hidden}
+.rd-lang button{all:unset;cursor:pointer;padding:5px 12px;font-size:13px;font-weight:700;color:var(--rd-muted)}
+.rd-lang button.rd-on{background:var(--rd-accent);color:#fff}
+.rd-card[data-lang="it"] [lang="en"],.rd-card[data-lang="en"] [lang="it"]{display:none!important}
+.rd-head{display:flex;gap:24px;align-items:center}
+.rd-icon{width:112px;height:112px;flex:0 0 112px;filter:drop-shadow(0 8px 16px rgba(0,0,0,.35))}
+.rd-title{margin:0 0 4px;font-size:30px;font-weight:800;color:var(--rd-text);letter-spacing:-.5px}
+.rd-tag{margin:0;color:var(--rd-muted);font-size:17px}
+.rd-badges{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.rd-badge{font-size:13px;padding:4px 10px;border-radius:999px;border:1px solid var(--rd-line);color:var(--rd-muted)}
+.rd-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:28px 0}
+.rd-feat{padding:16px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid var(--rd-line)}
+.rd-feat b{display:block;margin-bottom:4px;color:var(--rd-text)}
+.rd-feat span{color:var(--rd-muted);font-size:15px}
+.rd-buttons{display:flex;flex-wrap:wrap;gap:12px}
+.rd-btn{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none!important;transition:transform .15s,opacity .15s}
+.rd-btn:hover{transform:translateY(-2px);opacity:.92}
+.rd-btn-main{background:var(--rd-accent);color:#fff!important}
+.rd-btn-ghost{border:1px solid var(--rd-line);color:var(--rd-text)!important}
+.rd-help{margin-top:24px;border-top:1px solid var(--rd-line);padding-top:16px}
+.rd-help summary{cursor:pointer;font-weight:700;color:var(--rd-text)}
+.rd-help ol{margin:12px 0 0;padding-left:22px;color:var(--rd-muted)}
+.rd-help li{margin-bottom:6px}
+.rd-help code{background:rgba(255,255,255,.08);padding:1px 6px;border-radius:6px;color:var(--rd-text)}
+@media (max-width:600px){.rd-card{padding:56px 18px 24px}.rd-head{flex-direction:column;text-align:center}.rd-badges{justify-content:center}.rd-btn{width:100%;justify-content:center}}
+</style>
+
+<div class="rd-card" data-lang="it" id="rd-card-riordina-dock">
+  <div class="rd-lang" role="group" aria-label="Lingua / Language">
+    <button type="button" data-set="it" class="rd-on">IT</button>
+    <button type="button" data-set="en">EN</button>
+  </div>
+
+  <div class="rd-head">
+    <img class="rd-icon" src="https://raw.githubusercontent.com/mattdanieli/riordina-dock/main/docs/icona.png" alt="Riordina Dock">
+    <div>
+      <h2 class="rd-title">Riordina Dock</h2>
+      <p class="rd-tag" lang="it">Ordina le app del Dock del Mac per nome o per colore, con un clic. E se non ti piace, torni indietro.</p>
+      <p class="rd-tag" lang="en">Sort your Mac's Dock apps by name or by color in one click. Don't like it? Go back.</p>
+      <div class="rd-badges">
+        <span class="rd-badge">🍎 macOS 13+</span>
+        <span class="rd-badge"><span lang="it">💸 Gratis</span><span lang="en">💸 Free</span></span>
+        <span class="rd-badge">🔓 Open source</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="rd-features">
+    <div class="rd-feat">
+      <b lang="it">🔤 Per nome</b><b lang="en">🔤 By name</b>
+      <span lang="it">Tutte le app in ordine alfabetico, dalla A alla Z.</span>
+      <span lang="en">All apps in alphabetical order, from A to Z.</span>
+    </div>
+    <div class="rd-feat">
+      <b lang="it">🌈 Per colore</b><b lang="en">🌈 By color</b>
+      <span lang="it">Le icone si dispongono come un arcobaleno.</span>
+      <span lang="en">Icons line up like a rainbow.</span>
+    </div>
+    <div class="rd-feat">
+      <b lang="it">↩️ Ripristino</b><b lang="en">↩️ Restore</b>
+      <span lang="it">Un clic e il Dock torna esattamente com'era.</span>
+      <span lang="en">One click and your Dock is back exactly as it was.</span>
+    </div>
+  </div>
+
+  <div class="rd-buttons">
+    <a class="rd-btn rd-btn-main" href="https://github.com/mattdanieli/riordina-dock/releases/latest/download/RiordinaDock.zip">
+      <span lang="it">⬇️ Scarica per Mac</span><span lang="en">⬇️ Download for Mac</span>
+    </a>
+    <a class="rd-btn rd-btn-ghost" href="https://github.com/mattdanieli/riordina-dock" target="_blank" rel="noopener">
+      <span lang="it">Codice su GitHub</span><span lang="en">Code on GitHub</span>
+    </a>
+  </div>
+
+  <details class="rd-help">
+    <summary><span lang="it">Come installarla</span><span lang="en">How to install</span></summary>
+    <ol lang="it">
+      <li>Apri il file <code>RiordinaDock.zip</code> scaricato.</li>
+      <li>Trascina <b>Riordina Dock</b> nella cartella <b>Applicazioni</b>.</li>
+      <li>Aprila. Se macOS dice che non può verificarla: vai in <b>Impostazioni di Sistema → Privacy e sicurezza</b>, scorri in basso e clicca <b>Apri comunque</b>.</li>
+      <li>La trovi in alto nella barra dei menu, vicino all'orologio.</li>
+    </ol>
+    <ol lang="en">
+      <li>Open the downloaded <code>RiordinaDock.zip</code> file.</li>
+      <li>Drag <b>Riordina Dock</b> into your <b>Applications</b> folder.</li>
+      <li>Open it. If macOS says it can't verify it: go to <b>System Settings → Privacy &amp; Security</b>, scroll down and click <b>Open Anyway</b>.</li>
+      <li>You'll find it in the menu bar, next to the clock.</li>
+    </ol>
+  </details>
+</div>
+
+<script>
+(function(){
+  var card=document.getElementById("rd-card-riordina-dock"); if(!card) return;
+  function set(l){
+    card.setAttribute("data-lang",l);
+    card.querySelectorAll(".rd-lang button").forEach(function(b){b.classList.toggle("rd-on",b.getAttribute("data-set")===l);});
+  }
+  var start=(navigator.language||"it").toLowerCase().indexOf("it")===0?"it":"en";
+  try{var saved=localStorage.getItem("md-lang"); if(saved==="it"||saved==="en") start=saved;}catch(e){}
+  set(start);
+  card.querySelectorAll(".rd-lang button").forEach(function(b){
+    b.addEventListener("click",function(){var l=b.getAttribute("data-set"); set(l); try{localStorage.setItem("md-lang",l);}catch(e){}});
+  });
+})();
+</script>
+<!-- ===== FINE SCHEDA / END CARD ===== -->
