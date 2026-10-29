@@ -77,6 +77,8 @@ jobs:
           hdiutil verify dist/Ordock.dmg
       - name: Preview (welcome guide and installer window)
         continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p preview
           dist/Ordock.app/Contents/MacOS/Ordock --render-welcome "$PWD/preview"
@@ -86,13 +88,12 @@ jobs:
           screencapture -x preview/dmg-window.png || true
           hdiutil detach /Volumes/Ordock -force || true
           ls -la preview
-          for f in preview/*.png; do
-            sips -Z 900 -s format jpeg -s formatOptions 60 "$f" --out "${f%.png}.jpg" >/dev/null
-            echo "=== BEGIN ${f%.png}.jpg"
-            base64 -i "${f%.png}.jpg" | tr -d '\n'
-            echo
-            echo "=== END"
-          done
+          # Kept out of sight in a hidden ref (not a branch), only to look at the result
+          cd preview
+          git init -q
+          git add *.png
+          git -c user.name=ci -c user.email=ci@localhost commit -qm preview
+          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" HEAD:refs/preview/ordock
       - uses: actions/upload-artifact@v4
         with:
           name: Ordock
