@@ -7,7 +7,7 @@
 Sort your Dock apps by name, color, last use or category, from the menu bar.</p>
 
 <p align="center">
-  <a href="../../releases/latest/download/Ordock.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-111111?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="../../releases/latest/download/Ordock.dmg"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-111111?style=for-the-badge&logo=apple&logoColor=white"></a>
 </p>
 <p align="center"><sub>Free · Open source · macOS 13 Ventura or later (Apple Silicon &amp; Intel) · English &amp; Italiano · <a href="../../releases">All versions</a></sub></p>
 
@@ -49,7 +49,8 @@ brings back your original order.
   deleted from the Mac) and lets you choose which to remove from the Dock
 - **Keyboard shortcut:** **⌃⌥⌘ O** repeats your last sort, from any app (or ⌃⌥⌘ D / R, or off)
 - **Settings window** with every option in one place
-- **English and Italian:** choose while installing, switch anytime from the menu
+- **Welcome guide:** a short animated tour on first launch (reopen it anytime from the menu)
+- **English and Italian:** choose in the welcome guide, switch anytime from the menu
 - **Safe by design:**
   - your original Dock order is saved the first time you sort, and **Restore** brings it back
   - if the backup can't be saved, the Dock is not touched
@@ -60,11 +61,13 @@ brings back your original order.
 
 ## Download and install
 
-1. Download **[Ordock.zip](../../releases/latest/download/Ordock.zip)** and double-click it to unzip.
-2. Drag **Ordock.app** into your **Applications** folder.
-3. The first time, **right-click Ordock.app → Open**, then confirm.
+1. Download **[Ordock.dmg](../../releases/latest/download/Ordock.dmg)** and open it.
+2. Drag **Ordock** onto the **Applications** folder, right there in the window.
+3. The first time, **right-click Ordock in Applications → Open**, then confirm.
    On recent macOS versions you may need **System Settings → Privacy & Security → Open Anyway**.
-4. Look for the **Dock icon in the menu bar**, at the top right next to the clock.
+4. A short **welcome guide** shows you around. Then look for the **penguin in the menu bar**, at the top right next to the clock.
+
+Prefer a zip? **[Ordock.zip](../../releases/latest/download/Ordock.zip)** works too: unzip it and drag **Ordock.app** into Applications.
 
 > **Why the warning?** Ordock is not notarized by Apple (that requires a paid developer account),
 > so macOS asks you to confirm the first time. The full source code is right here in this repository.
@@ -159,7 +162,7 @@ Requires **Xcode** (or the Command Line Tools) and macOS 13 or later.
 3. Choose the language: the app is built, copied to Applications and opened.
 
 Every push to `main` builds the app automatically (see the **Actions** tab), and every new version is
-published under **[Releases](../../releases)** with `Ordock.zip` attached.
+published under **[Releases](../../releases)** with `Ordock.dmg` and `Ordock.zip` attached.
 
 ## Support
 
