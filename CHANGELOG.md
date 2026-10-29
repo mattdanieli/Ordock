@@ -4,7 +4,8 @@
 
 - **Welcome guide:** a short animated tour on first launch shows where Ordock lives and how to use it,
   with the language choice (reopen it anytime from the menu)
-- **macOS installer:** `Ordock.dmg` with the classic window, just drag Ordock onto Applications
+- **macOS installer:** `Ordock.dmg` with the classic window, just drag Ordock onto Applications,
+  with illustrated steps for the first launch and a **First launch help** guide (English and Italian)
 - **New icon:** the Ordock penguin, with the rainbow Dock on its belly
 - **Matching menu bar icon** in black and white, that adapts to light and dark mode
 - Ordock can no longer be opened twice: opening it again shows the settings window
