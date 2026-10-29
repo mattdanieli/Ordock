@@ -63,8 +63,10 @@ brings back your original order.
 
 1. Download **[Ordock.dmg](../../releases/latest/download/Ordock.dmg)** and open it.
 2. Drag **Ordock** onto the **Applications** folder, right there in the window.
-3. The first time, **right-click Ordock in Applications → Open**, then confirm.
-   On recent macOS versions you may need **System Settings → Privacy & Security → Open Anyway**.
+3. The first time, macOS may say it can't open Ordock. That's normal for free apps from independent developers:
+   open **System Settings → Privacy & Security**, scroll down and click **Open Anyway** (then enter your password).
+   On macOS 14 or older: **right-click Ordock in Applications → Open**.
+   The installer window shows these steps too, and **First launch help** inside it explains them with pictures.
 4. A short **welcome guide** shows you around. Then look for the **penguin in the menu bar**, at the top right next to the clock.
 
 Prefer a zip? **[Ordock.zip](../../releases/latest/download/Ordock.zip)** works too: unzip it and drag **Ordock.app** into Applications.
