@@ -69,7 +69,7 @@ jobs:
           show_sidebar = False
           icon_size = 96
           text_size = 13
-          icon_locations = {"Ordock.app": (200, 130), "Applications": (520, 130), "First launch help.html": (96, 524)}
+          icon_locations = {"Ordock.app": (200, 130), "Applications": (520, 130), "First launch help.html": (96, 510)}
           hide_extension = ["Ordock.app", "First launch help.html"]
           format = "UDZO"
           EOF
