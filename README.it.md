@@ -7,7 +7,7 @@
 Ordina le app del Dock per nome, colore, ultimo utilizzo o categoria, dalla barra dei menu.</p>
 
 <p align="center">
-  <a href="../../releases/latest/download/Ordock.zip"><img alt="Scarica per macOS" src="https://img.shields.io/badge/Scarica-macOS-111111?style=for-the-badge&logo=apple&logoColor=white"></a>
+  <a href="../../releases/latest/download/Ordock.dmg"><img alt="Scarica per macOS" src="https://img.shields.io/badge/Scarica-macOS-111111?style=for-the-badge&logo=apple&logoColor=white"></a>
 </p>
 <p align="center"><sub>Gratis · Open source · macOS 13 Ventura o successivo (Apple Silicon e Intel) · Italiano e English · <a href="../../releases">Tutte le versioni</a></sub></p>
 
@@ -49,7 +49,8 @@ e torna tutto com'era.
   e ti fa scegliere quali togliere dal Dock
 - **Scorciatoia da tastiera:** **⌃⌥⌘ O** ripete l'ultimo ordinamento, da qualsiasi app (oppure ⌃⌥⌘ D / R, o nessuna)
 - **Finestra impostazioni** con tutte le opzioni in un unico posto
-- **Italiano e inglese:** scegli la lingua durante l'installazione e cambiala quando vuoi dal menu
+- **Guida di benvenuto:** un breve giro animato al primo avvio (la riapri quando vuoi dal menu)
+- **Italiano e inglese:** scegli la lingua nella guida di benvenuto e cambiala quando vuoi dal menu
 - **Sicura:**
   - la prima volta che ordini, l'ordine originale viene salvato e **Ripristina** lo rimette
   - se non riesce a salvare la copia di sicurezza, il Dock non viene toccato
@@ -60,11 +61,13 @@ e torna tutto com'era.
 
 ## Scarica e installa
 
-1. Scarica **[Ordock.zip](../../releases/latest/download/Ordock.zip)** e fai doppio clic per estrarlo.
-2. Trascina **Ordock.app** nella cartella **Applicazioni**.
-3. La prima volta fai **clic destro su Ordock.app → Apri** e conferma.
+1. Scarica **[Ordock.dmg](../../releases/latest/download/Ordock.dmg)** e aprilo.
+2. Trascina **Ordock** sulla cartella **Applicazioni**, lì nella finestra.
+3. La prima volta fai **clic destro su Ordock in Applicazioni → Apri** e conferma.
    Sulle versioni recenti di macOS può servire **Impostazioni di Sistema → Privacy e sicurezza → Apri comunque**.
-4. Cerca l'**icona del Dock nella barra dei menu**, in alto a destra vicino all'orologio.
+4. Una breve **guida di benvenuto** ti mostra tutto. Poi cerca il **pinguino nella barra dei menu**, in alto a destra vicino all'orologio.
+
+Preferisci uno zip? Va bene anche **[Ordock.zip](../../releases/latest/download/Ordock.zip)**: estrailo e trascina **Ordock.app** in Applicazioni.
 
 > **Perché compare l'avviso?** Ordock non è notarizzata da Apple (serve un account sviluppatore a pagamento),
 > quindi macOS chiede conferma la prima volta. Tutto il codice sorgente è qui, in questo repository.
@@ -159,7 +162,7 @@ Serve **Xcode** (o gli strumenti da riga di comando) e macOS 13 o successivo.
 3. Scegli la lingua: l'app viene compilata, copiata in Applicazioni e aperta.
 
 Ogni modifica su `main` compila l'app in automatico (scheda **Actions**) e ogni nuova versione viene
-pubblicata in **[Releases](../../releases)** con `Ordock.zip` allegato.
+pubblicata in **[Releases](../../releases)** con `Ordock.dmg` e `Ordock.zip` allegati.
 
 ## Supporta
 

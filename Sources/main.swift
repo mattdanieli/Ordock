@@ -535,6 +535,12 @@ enum Prefs {
         set { d.set(newValue, forKey: "lingua") }
     }
 
+    /// La guida di benvenuto si apre da sola solo al primo avvio.
+    static var welcomeSeen: Bool {
+        get { d.bool(forKey: "benvenutoVisto") }
+        set { d.set(newValue, forKey: "benvenutoVisto") }
+    }
+
     /// Lettera della scorciatoia ⌃⌥⌘ (vuota = nessuna scorciatoia).
     static var hotKey: String {
         get { d.string(forKey: "scorciatoia") ?? "O" }
@@ -654,10 +660,40 @@ let showNotification = Notification.Name("com.mattdanieli.ordock.mostra")
 let donateURL = URL(string: "https://paypal.me/mattdanieli")!
 let websiteURL = URL(string: "https://www.mattdanieli.it/apps/")!
 
+/// L'icona della barra dei menu: il pinguino di Ordock, in bianco e nero (si adatta a chiaro e scuro).
+func ordockMenuBarImage() -> NSImage {
+    let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+        NSColor.black.setFill()
+        // Musetto a doppia curva e pancia, come nell'icona dell'app
+        NSBezierPath(ovalIn: NSRect(x: 2.7, y: 2.4, width: 7.2, height: 7.2)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 8.1, y: 2.4, width: 7.2, height: 7.2)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 2.6, y: 7.2, width: 12.8, height: 16)).fill()
+        // Occhi, becco e Dock sulla pancia sono "ritagliati" nel corpo
+        NSGraphicsContext.current?.compositingOperation = .clear
+        NSBezierPath(ovalIn: NSRect(x: 5.3, y: 4.6, width: 2.4, height: 2.4)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 10.3, y: 4.6, width: 2.4, height: 2.4)).fill()
+        let beak = NSBezierPath()
+        beak.move(to: NSPoint(x: 7.8, y: 8.2))
+        beak.line(to: NSPoint(x: 10.2, y: 8.2))
+        beak.line(to: NSPoint(x: 9, y: 10.4))
+        beak.close()
+        beak.fill()
+        for i in 0..<4 {
+            NSBezierPath(roundedRect: NSRect(x: 4.6 + Double(i) * 2.3, y: 12.6, width: 1.8, height: 1.8),
+                         xRadius: 0.5, yRadius: 0.5).fill()
+        }
+        return true
+    }
+    image.isTemplate = true
+    image.accessibilityDescription = "Ordock"
+    return image
+}
+
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
+    private var welcomeWindow: NSWindow?
 
     private var lastRun = Date.distantPast
 
@@ -692,6 +728,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         HotKey.onPress = { [weak self] in self?.run(Prefs.lastMethod) }
         _ = HotKey.register(Prefs.hotKey)
+
+        // Al primo avvio spiego dove trovare Ordock e come si usa.
+        if !Prefs.welcomeSeen { openWelcome() }
     }
 
     // Doppio clic sull'app già aperta: mostro le impostazioni invece di non fare nulla.
@@ -700,34 +739,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         return false
     }
 
-    /// L'icona della barra dei menu: il pinguino di Ordock, in bianco e nero (si adatta a chiaro e scuro).
-    private func menuBarIcon() -> NSImage {
-        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
-            NSColor.black.setFill()
-            // Musetto a doppia curva e pancia, come nell'icona dell'app
-            NSBezierPath(ovalIn: NSRect(x: 2.7, y: 2.4, width: 7.2, height: 7.2)).fill()
-            NSBezierPath(ovalIn: NSRect(x: 8.1, y: 2.4, width: 7.2, height: 7.2)).fill()
-            NSBezierPath(ovalIn: NSRect(x: 2.6, y: 7.2, width: 12.8, height: 16)).fill()
-            // Occhi, becco e Dock sulla pancia sono "ritagliati" nel corpo
-            NSGraphicsContext.current?.compositingOperation = .clear
-            NSBezierPath(ovalIn: NSRect(x: 5.3, y: 4.6, width: 2.4, height: 2.4)).fill()
-            NSBezierPath(ovalIn: NSRect(x: 10.3, y: 4.6, width: 2.4, height: 2.4)).fill()
-            let beak = NSBezierPath()
-            beak.move(to: NSPoint(x: 7.8, y: 8.2))
-            beak.line(to: NSPoint(x: 10.2, y: 8.2))
-            beak.line(to: NSPoint(x: 9, y: 10.4))
-            beak.close()
-            beak.fill()
-            for i in 0..<4 {
-                NSBezierPath(roundedRect: NSRect(x: 4.6 + Double(i) * 2.3, y: 12.6, width: 1.8, height: 1.8),
-                             xRadius: 0.5, yRadius: 0.5).fill()
-            }
-            return true
-        }
-        image.isTemplate = true
-        image.accessibilityDescription = "Ordock"
-        return image
-    }
+    private func menuBarIcon() -> NSImage { ordockMenuBarImage() }
 
     @objc private func appActivated(_ note: Notification) {
         if let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication {
@@ -757,6 +769,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                           #selector(saveCurrentAsOriginal), symbol: "square.and.arrow.down"))
         menu.addItem(.separator())
         menu.addItem(item(L("Impostazioni…", "Settings…"), #selector(openSettings), key: ",", symbol: "gearshape"))
+        menu.addItem(item(L("Guida di benvenuto…", "Welcome guide…"), #selector(openWelcome), symbol: "questionmark.circle"))
         menu.addItem(parent(L("Lingua", "Language"), languageMenu(), symbol: "globe"))
         menu.addItem(parent(L("Scorciatoia", "Shortcut"), hotKeyMenu(), symbol: "command"))
         let login = item(L("Apri all'avvio del Mac", "Open at login"), #selector(toggleLogin), symbol: "power")
@@ -1243,6 +1256,28 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
+    @objc func openWelcome() {
+        Prefs.welcomeSeen = true
+        if let w = welcomeWindow, w.isVisible {
+            NSApp.activate(ignoringOtherApps: true)
+            w.makeKeyAndOrderFront(nil)
+            return
+        }
+        // Ogni volta una finestra nuova, così la guida riparte dalla prima scheda.
+        let host = NSHostingController(rootView: WelcomeView(close: { [weak self] in self?.welcomeWindow?.close() }))
+        let w = NSWindow(contentViewController: host)
+        w.styleMask = [.titled, .closable, .fullSizeContentView]
+        w.titlebarAppearsTransparent = true
+        w.titleVisibility = .hidden
+        w.isMovableByWindowBackground = true
+        w.isReleasedWhenClosed = false
+        w.title = "Ordock"
+        w.center()
+        welcomeWindow = w
+        NSApp.activate(ignoringOtherApps: true)
+        w.makeKeyAndOrderFront(nil)
+    }
+
     @objc func openDonate() { NSWorkspace.shared.open(donateURL) }
     @objc func openWebsite() { NSWorkspace.shared.open(websiteURL) }
 
@@ -1663,6 +1698,468 @@ struct CleanupTab: View {
     }
 }
 
+// MARK: - Guida di benvenuto
+
+/// I colori delle caselle del Dock, come nell'icona.
+let dockColors: [Color] = [
+    Color(red: 1.00, green: 0.27, blue: 0.23),
+    Color(red: 1.00, green: 0.62, blue: 0.04),
+    Color(red: 1.00, green: 0.84, blue: 0.04),
+    Color(red: 0.19, green: 0.82, blue: 0.35),
+    Color(red: 0.04, green: 0.52, blue: 1.00),
+    Color(red: 0.75, green: 0.35, blue: 0.95),
+]
+/// Il viola dell'icona, e una versione più chiara che si legge anche sul tema scuro.
+let ordockPlum = Color(red: 0.55, green: 0.16, blue: 0.37)
+let ordockPink = Color(red: 0.86, green: 0.36, blue: 0.62)
+
+let welcomePageCount = 5
+
+private func wEase(_ x: Double) -> Double {
+    let x = min(max(x, 0), 1)
+    return 1 - pow(1 - x, 3)
+}
+
+/// Avanzamento 0...1 di un'animazione che parte a `start` secondi e dura `dur`.
+private func wPhase(_ t: Double, _ start: Double, _ dur: Double) -> Double { wEase((t - start) / dur) }
+
+private func wLerp(_ a: Double, _ b: Double, _ k: Double) -> Double { a + (b - a) * k }
+
+func welcomeText(_ page: Int) -> (String, String) {
+    switch page {
+    case 0:
+        return (L("Benvenuto in Ordock", "Welcome to Ordock"),
+                L("Ordock mette in ordine le app del Dock del tuo Mac con un clic. Ecco un giro veloce: ci vogliono 30 secondi.",
+                  "Ordock puts the apps in your Mac's Dock in order, in one click. Here is a quick tour: it takes 30 seconds."))
+    case 1:
+        return (L("Vive nella barra dei menu", "It lives in the menu bar"),
+                L("Ordock non ha un'icona nel Dock: cerca il pinguino in alto nello schermo, vicino all'orologio. Cliccalo per aprire il menu.",
+                  "Ordock has no icon in the Dock: look for the penguin at the top of the screen, next to the clock. Click it to open the menu."))
+    case 2:
+        return (L("Ordina con un clic", "Sort in one click"),
+                L("Per nome, per colore, per ultimo utilizzo o per categoria, con un piccolo spazio tra i gruppi. La scorciatoia ⌃⌥⌘ O ripete l'ultimo ordine da qualsiasi app.",
+                  "By name, by color, by last use or by category, with a small space between groups. The ⌃⌥⌘ O shortcut repeats the last sort from any app."))
+    case 3:
+        return (L("Ordini salvati e pulizia", "Saved orders and clean-up"),
+                L("Salva il Dock come \"Lavoro\" o \"Weekend\" e richiamalo con un clic. La pulizia trova le app che non apri da mesi e ti fa scegliere quali togliere dal Dock.",
+                  "Save your Dock as \"Work\" or \"Weekend\" and bring it back with one click. Clean-up finds the apps you haven't opened in months and lets you choose which to take out of the Dock."))
+    default:
+        return (L("Sempre reversibile", "Always reversible"),
+                L("La prima volta che ordini, Ordock salva l'ordine originale: Ripristina lo riporta com'era. Le app non vengono mai cancellate dal Mac. Tutte le opzioni sono in Impostazioni, nel menu.",
+                  "The first time you sort, Ordock saves your original order: Restore brings it back. Apps are never deleted from your Mac. Every option is in Settings, in the menu."))
+    }
+}
+
+struct WelcomeView: View {
+    let close: () -> Void
+    @AppStorage("lingua") private var language = "auto"
+    @State private var page = 0
+    @State private var forward = true
+
+    private var last: Bool { page == welcomePageCount - 1 }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ZStack {
+                WelcomePageView(page: page, time: nil)
+                    .id("\(page)-\(language)")
+                    .transition(.asymmetric(
+                        insertion: .move(edge: forward ? .trailing : .leading).combined(with: .opacity),
+                        removal: .move(edge: forward ? .leading : .trailing).combined(with: .opacity)))
+            }
+            .frame(width: 720, height: 486)
+            .clipped()
+            footer
+        }
+        .frame(width: 720)
+    }
+
+    private func go(_ n: Int) {
+        guard n != page, n >= 0, n < welcomePageCount else { return }
+        forward = n > page
+        withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) { page = n }
+    }
+
+    private var footer: some View {
+        ZStack {
+            HStack(spacing: 8) {
+                ForEach(0..<welcomePageCount, id: \.self) { i in
+                    Capsule()
+                        .fill(i == page ? ordockPink : Color.secondary.opacity(0.35))
+                        .frame(width: i == page ? 22 : 8, height: 8)
+                        .contentShape(Rectangle())
+                        .onTapGesture { go(i) }
+                }
+            }
+            HStack(spacing: 10) {
+                if !last {
+                    Button(L("Salta", "Skip")) { close() }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.secondary)
+                        .keyboardShortcut(.cancelAction)
+                }
+                Spacer()
+                if page > 0 {
+                    Button(L("Indietro", "Back")) { go(page - 1) }
+                        .controlSize(.large)
+                }
+                Button(last ? L("Inizia", "Get started") : L("Avanti", "Next")) {
+                    if last { close() } else { go(page + 1) }
+                }
+                .buttonStyle(.borderedProminent)
+                .tint(ordockPlum)
+                .controlSize(.large)
+                .keyboardShortcut(.defaultAction)
+            }
+        }
+        .padding(.horizontal, 28)
+        .padding(.vertical, 20)
+    }
+}
+
+/// Una scheda: il disegno animato in alto, il testo sotto.
+struct WelcomePageView: View {
+    let page: Int
+    /// Tempo fisso per le immagini della guida; nil = animazione dal vivo.
+    let time: Double?
+    @AppStorage("lingua") private var language = "auto"
+    @State private var start = Date()
+    @State private var done = false
+
+    var body: some View {
+        let (title, text) = welcomeText(page)
+        VStack(alignment: .leading, spacing: 0) {
+            Group {
+                if let time {
+                    WelcomeArt(page: page, t: time)
+                } else {
+                    TimelineView(.animation(minimumInterval: nil, paused: done)) { context in
+                        WelcomeArt(page: page, t: context.date.timeIntervalSince(start))
+                    }
+                }
+            }
+            .frame(width: 720, height: 300)
+            .background(LinearGradient(colors: [ordockPlum.opacity(0.22), ordockPlum.opacity(0.06)],
+                                       startPoint: .top, endPoint: .bottom))
+            .clipped()
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(page + 1) / \(welcomePageCount)")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(ordockPink)
+                Text(title)
+                    .font(.system(size: 24, weight: .bold))
+                Text(text)
+                    .font(.system(size: 14))
+                    .foregroundStyle(.secondary)
+                    .lineSpacing(3)
+                    .fixedSize(horizontal: false, vertical: true)
+                if page == 0 {
+                    Picker(selection: $language) {
+                        Text(L("Automatica (come il Mac)", "Automatic (same as Mac)")).tag("auto")
+                        Text("Italiano").tag("it")
+                        Text("English").tag("en")
+                    } label: {
+                        Label(L("Lingua", "Language"), systemImage: "globe")
+                    }
+                    .frame(width: 360)
+                    .padding(.top, 6)
+                }
+            }
+            .padding(.horizontal, 40)
+            .padding(.top, 24)
+            Spacer(minLength: 0)
+        }
+        .frame(width: 720, height: 486, alignment: .top)
+        .task {
+            try? await Task.sleep(nanoseconds: 3_500_000_000)
+            done = true
+        }
+    }
+}
+
+struct WelcomeArt: View {
+    let page: Int
+    let t: Double
+
+    var body: some View {
+        switch page {
+        case 0: ArtHello(t: t)
+        case 1: ArtMenuBar(t: t)
+        case 2: ArtSort(t: t)
+        case 3: ArtSaved(t: t)
+        default: ArtSafe(t: t)
+        }
+    }
+}
+
+/// Una casella del Dock in miniatura.
+struct DockTile: View {
+    let color: Color
+    var size: CGFloat = 40
+
+    var body: some View {
+        RoundedRectangle(cornerRadius: size * 0.24)
+            .fill(color.gradient)
+            .frame(width: size, height: size)
+    }
+}
+
+/// Il vetro del Dock dietro alle caselle.
+struct DockGlass: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .padding(10)
+            .background(RoundedRectangle(cornerRadius: 18).fill(Color.primary.opacity(0.07)))
+            .overlay(RoundedRectangle(cornerRadius: 18).stroke(Color.primary.opacity(0.12), lineWidth: 1))
+    }
+}
+
+/// L'icona di Ordock e un Dock che si riempie.
+struct ArtHello: View {
+    let t: Double
+
+    var body: some View {
+        let k = wPhase(t, 0, 0.6)
+        VStack(spacing: 22) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .frame(width: 150, height: 150)
+                .scaleEffect(wLerp(0.8, 1, k))
+                .opacity(k)
+                .shadow(color: .black.opacity(0.25), radius: 12, y: 6)
+            HStack(spacing: 10) {
+                ForEach(0..<dockColors.count, id: \.self) { i in
+                    let p = wPhase(t, 0.35 + Double(i) * 0.08, 0.4)
+                    DockTile(color: dockColors[i])
+                        .scaleEffect(p)
+                        .opacity(p)
+                }
+            }
+            .modifier(DockGlass())
+        }
+        .padding(.top, 18)
+    }
+}
+
+/// La barra dei menu con il pinguino, e il menu di Ordock che si apre.
+struct ArtMenuBar: View {
+    let t: Double
+
+    var body: some View {
+        let items: [(String, String)] = [
+            ("textformat.abc", L("Ordina per nome (A → Z)", "Sort by name (A → Z)")),
+            ("paintpalette", L("Ordina per colore", "Sort by color")),
+            ("clock", L("Ordina per ultimo utilizzo", "Sort by last used")),
+            ("square.grid.2x2", L("Ordina per categoria", "Sort by category")),
+            ("bookmark", L("Ordini salvati", "Saved orders")),
+        ]
+        let open = wPhase(t, 0.9, 0.35)
+        let pulse = t < 0.9 ? 0.5 + 0.5 * sin(t * 8) : 1.0
+        let highlight = t > 1.8
+        VStack(spacing: 0) {
+            HStack(spacing: 14) {
+                Image(systemName: "apple.logo")
+                Text("Finder").fontWeight(.semibold)
+                Spacer()
+                ZStack {
+                    RoundedRectangle(cornerRadius: 5)
+                        .fill(ordockPink.opacity(0.25 + 0.3 * pulse))
+                        .frame(width: 30, height: 22)
+                    Image(nsImage: ordockMenuBarImage())
+                        .renderingMode(.template)
+                }
+                Image(systemName: "wifi")
+                Image(systemName: "battery.75")
+                Text("9:41").fontWeight(.medium)
+            }
+            .font(.system(size: 13))
+            .padding(.horizontal, 18)
+            .frame(height: 30)
+            .background(RoundedRectangle(cornerRadius: 8).fill(Color.primary.opacity(0.08)))
+            HStack {
+                Spacer()
+                VStack(alignment: .leading, spacing: 0) {
+                    Text("Ordock")
+                        .font(.system(size: 13, weight: .bold))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                    Divider()
+                    ForEach(0..<items.count, id: \.self) { i in
+                        let k = wPhase(t, 1.1 + Double(i) * 0.08, 0.3)
+                        let on = highlight && i == 1
+                        HStack(spacing: 8) {
+                            Image(systemName: items[i].0).frame(width: 18)
+                            Text(items[i].1)
+                            Spacer()
+                        }
+                        .font(.system(size: 13))
+                        .foregroundStyle(on ? Color.white : Color.primary)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(RoundedRectangle(cornerRadius: 5).fill(Color.accentColor.opacity(on ? 0.9 : 0)))
+                        .padding(.horizontal, 4)
+                        .opacity(k)
+                    }
+                }
+                .padding(.vertical, 4)
+                .frame(width: 280)
+                .background(RoundedRectangle(cornerRadius: 10).fill(Color(nsColor: .windowBackgroundColor)))
+                .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.primary.opacity(0.12), lineWidth: 1))
+                .shadow(color: .black.opacity(0.22), radius: 14, y: 6)
+                .scaleEffect(CGFloat(wLerp(0.92, 1, open)), anchor: .top)
+                .opacity(open)
+                .padding(.trailing, 70)
+            }
+            .padding(.top, 6)
+            Spacer(minLength: 0)
+        }
+        .padding(.top, 34)
+        .padding(.horizontal, 30)
+    }
+}
+
+/// Le caselle del Dock si mettono in fila come un arcobaleno.
+struct ArtSort: View {
+    let t: Double
+    /// Dove si trova ogni colore prima dell'ordine.
+    private let startSlot = [4, 0, 5, 2, 1, 3]
+
+    var body: some View {
+        let k = wPhase(t, 0.8, 1.0)
+        let size: CGFloat = 50
+        let gap: CGFloat = 12
+        let width = CGFloat(dockColors.count) * size + CGFloat(dockColors.count - 1) * gap
+        VStack(spacing: 26) {
+            HStack(spacing: 8) {
+                chip("textformat.abc", L("Nome", "Name"), on: false)
+                chip("paintpalette", L("Colore", "Color"), on: t > 0.6)
+                chip("clock", L("Ultimo utilizzo", "Last used"), on: false)
+                chip("square.grid.2x2", L("Categoria", "Category"), on: false)
+            }
+            ZStack(alignment: .leading) {
+                ForEach(0..<dockColors.count, id: \.self) { i in
+                    let from = CGFloat(startSlot[i])
+                    let slot = from + (CGFloat(i) - from) * CGFloat(k)
+                    let lift = CGFloat(sin(k * .pi)) * (i % 2 == 0 ? -18 : 18)
+                    DockTile(color: dockColors[i], size: size)
+                        .offset(x: slot * (size + gap), y: lift)
+                }
+            }
+            .frame(width: width, height: size, alignment: .leading)
+            .modifier(DockGlass())
+        }
+        .padding(.top, 20)
+    }
+
+    private func chip(_ symbol: String, _ text: String, on: Bool) -> some View {
+        Label(text, systemImage: symbol)
+            .font(.system(size: 12, weight: .semibold))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Capsule().fill(on ? ordockPlum : Color.primary.opacity(0.07)))
+            .foregroundStyle(on ? Color.white : Color.secondary)
+    }
+}
+
+/// Due ordini salvati, e la pulizia che toglie le app non usate.
+struct ArtSaved: View {
+    let t: Double
+
+    var body: some View {
+        let k = wPhase(t, 1.0, 0.8)
+        HStack(spacing: 44) {
+            VStack(alignment: .leading, spacing: 12) {
+                savedCard(L("Lavoro", "Work"), [0, 4, 3, 5], k: wPhase(t, 0.2, 0.5))
+                savedCard("Weekend", [1, 2, 5, 0], k: wPhase(t, 0.45, 0.5))
+            }
+            VStack(spacing: 16) {
+                HStack(spacing: 8) {
+                    ForEach(0..<5, id: \.self) { i in
+                        let unused = i == 1 || i == 3
+                        DockTile(color: unused ? Color.gray : dockColors[i], size: 38)
+                            .opacity(unused ? 1 - k : 1)
+                            .offset(y: unused ? CGFloat(k) * 40 : 0)
+                    }
+                }
+                .modifier(DockGlass())
+                Label(L("Pulizia Dock", "Clean up Dock"), systemImage: "sparkles")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(ordockPink)
+            }
+        }
+        .padding(.top, 20)
+    }
+
+    private func savedCard(_ name: String, _ tiles: [Int], k: Double) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "bookmark.fill").foregroundStyle(ordockPink)
+            Text(name)
+                .font(.system(size: 14, weight: .semibold))
+                .frame(width: 80, alignment: .leading)
+            HStack(spacing: 4) {
+                ForEach(tiles, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 5).fill(dockColors[i]).frame(width: 20, height: 20)
+                }
+            }
+        }
+        .padding(12)
+        .background(RoundedRectangle(cornerRadius: 12).fill(Color(nsColor: .controlBackgroundColor)))
+        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.primary.opacity(0.1), lineWidth: 1))
+        .opacity(k)
+        .offset(x: CGFloat(1 - k) * -20)
+    }
+}
+
+/// Ripristino, copia dell'ordine originale, app mai cancellate.
+struct ArtSafe: View {
+    let t: Double
+
+    var body: some View {
+        let rows: [(String, String, Color)] = [
+            ("arrow.uturn.backward", L("Ripristina ordine originale", "Restore original order"), ordockPink),
+            ("tray.and.arrow.down.fill", L("L'ordine originale viene salvato", "Your original order is saved"), .blue),
+            ("checkmark.shield.fill", L("Le app non vengono mai cancellate", "Apps are never deleted"), .green),
+        ]
+        VStack(spacing: 14) {
+            ForEach(0..<rows.count, id: \.self) { i in
+                let k = wPhase(t, 0.2 + Double(i) * 0.3, 0.5)
+                HStack(spacing: 14) {
+                    ZStack {
+                        Circle().fill(rows[i].2).frame(width: 34, height: 34)
+                        Image(systemName: rows[i].0)
+                            .font(.system(size: 15, weight: .bold))
+                            .foregroundStyle(Color.white)
+                    }
+                    Text(rows[i].1).font(.system(size: 15, weight: .semibold))
+                    Spacer()
+                }
+                .padding(.horizontal, 14)
+                .frame(width: 420, height: 58)
+                .background(RoundedRectangle(cornerRadius: 14).fill(Color(nsColor: .controlBackgroundColor)))
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(rows[i].2.opacity(0.6), lineWidth: 1.5))
+                .opacity(k)
+                .offset(x: CGFloat(1 - k) * 30)
+            }
+        }
+        .padding(.top, 20)
+    }
+}
+
+/// Salva le schede della guida come immagini PNG (Ordock --render-welcome cartella).
+@MainActor
+func renderWelcome(to folder: String) {
+    for page in 0..<welcomePageCount {
+        let view = WelcomePageView(page: page, time: 10)
+            .background(Color(nsColor: .windowBackgroundColor))
+        let renderer = ImageRenderer(content: view)
+        renderer.scale = 2
+        guard let image = renderer.nsImage, let tiff = image.tiffRepresentation,
+              let rep = NSBitmapImageRep(data: tiff),
+              let png = rep.representation(using: .png, properties: [:]) else { continue }
+        try? png.write(to: URL(fileURLWithPath: folder).appendingPathComponent("welcome-\(page + 1).png"))
+    }
+}
+
 // MARK: - Avvio
 
 @main
@@ -1672,6 +2169,12 @@ enum OrdockApp {
 
     static func main() {
         let app = NSApplication.shared
+        // Ordock --render-welcome cartella: salva le schede della guida come immagini (per il README)
+        let args = CommandLine.arguments
+        if let i = args.firstIndex(of: "--render-welcome"), i + 1 < args.count {
+            renderWelcome(to: args[i + 1])
+            return
+        }
         app.delegate = appDelegate
         app.setActivationPolicy(.accessory)
         app.run()

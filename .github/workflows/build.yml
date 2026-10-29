@@ -3,13 +3,20 @@ name: Build
 # - Every push to main and every pull request: builds Ordock.app (Apple Silicon + Intel).
 #   The download appears under "Artifacts" at the bottom of the run page (Actions tab).
 # - Push to main with a new version in Sources/Info.plist: creates the release vX.Y.Z with
-#   Ordock.zip attached (the README download button always points to the latest one).
+#   Ordock.dmg and Ordock.zip attached (the README download button always points to the latest one).
+# - Run it by hand (Actions > Build > Run workflow) with "Replace the release" ticked to rebuild
+#   the release of the current version from scratch, with the same version number.
 on:
   push:
     branches: [main]
     paths-ignore: ["**.md", "docs/**"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      replace_release:
+        description: "Replace the release of the current version with a fresh build"
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -42,11 +49,38 @@ jobs:
           cd dist
           # Fixed name, so the README link .../releases/latest/download/Ordock.zip always works
           ditto -c -k --keepParent Ordock.app Ordock.zip
-          rm -rf Ordock.app
+      - name: Create Ordock.dmg
+        run: |
+          # The classic install window: the app on the left, an arrow, the Applications folder on the right
+          python3 -m venv "$RUNNER_TEMP/dmg"
+          "$RUNNER_TEMP/dmg/bin/pip" install --quiet dmgbuild
+          tiffutil -cathidpicheck assets/dmg/background.png assets/dmg/background@2x.png -out dist/dmg-background.tiff
+          cat > dist/dmg-settings.py <<'EOF'
+          files = ["dist/Ordock.app"]
+          symlinks = {"Applications": "/Applications"}
+          icon = "Sources/AppIcon.icns"
+          background = "dist/dmg-background.tiff"
+          window_rect = ((200, 160), (640, 428))
+          default_view = "icon-view"
+          show_status_bar = False
+          show_tab_view = False
+          show_toolbar = False
+          show_pathbar = False
+          show_sidebar = False
+          icon_size = 128
+          text_size = 13
+          icon_locations = {"Ordock.app": (160, 190), "Applications": (480, 190)}
+          hide_extension = ["Ordock.app"]
+          format = "UDZO"
+          EOF
+          "$RUNNER_TEMP/dmg/bin/dmgbuild" -s dist/dmg-settings.py "Ordock" dist/Ordock.dmg
+          hdiutil verify dist/Ordock.dmg
       - uses: actions/upload-artifact@v4
         with:
           name: Ordock
-          path: dist/Ordock.zip
+          path: |
+            dist/Ordock.zip
+            dist/Ordock.dmg
 
   release:
     needs: macos
@@ -61,11 +95,15 @@ jobs:
         run: |
           VERSION=$(grep -A0 'CFBundleShortVersionString' Sources/Info.plist | sed -E 's/.*<string>([^<]+)<\/string>.*/\1/')
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if gh release view "v$VERSION" >/dev/null 2>&1; then
+          if ! gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          elif [ "${{ inputs.replace_release }}" = "true" ]; then
+            echo "Replacing release v$VERSION with this build."
+            gh release delete "v$VERSION" --cleanup-tag --yes
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          else
             echo "new=false" >> "$GITHUB_OUTPUT"
             echo "Release v$VERSION already exists: nothing to publish."
-          else
-            echo "new=true" >> "$GITHUB_OUTPUT"
           fi
       - uses: actions/download-artifact@v4
         if: steps.v.outputs.new == 'true'
@@ -81,13 +119,13 @@ jobs:
           cat >> notes.md <<'NOTES'
 
           ### Download
-          **Ordock.zip** · macOS 13 Ventura or later, Apple Silicon and Intel
+          **Ordock.dmg** (or **Ordock.zip**) · macOS 13 Ventura or later, Apple Silicon and Intel
 
           ### Install
-          1. Unzip **Ordock.zip** and drag **Ordock.app** into **Applications**.
-          2. The first time, right-click **Ordock.app** and choose **Open**
+          1. Open **Ordock.dmg** and drag **Ordock** onto the **Applications** folder.
+          2. The first time, right-click **Ordock** in Applications and choose **Open**
              (on recent macOS: System Settings › Privacy & Security › **Open Anyway**).
-          3. Look for the Dock icon in the menu bar, next to the clock.
+          3. A short welcome guide explains everything. Look for the penguin in the menu bar, next to the clock.
 
           Upgrading from **Riordina Dock**? Delete the old app from Applications: Ordock picks up its backups automatically.
 
@@ -101,4 +139,6 @@ jobs:
           tag_name: v${{ steps.v.outputs.version }}
           name: Ordock ${{ steps.v.outputs.version }}
           body_path: notes.md
-          files: dist/Ordock.zip
+          files: |
+            dist/Ordock.dmg
+            dist/Ordock.zip
