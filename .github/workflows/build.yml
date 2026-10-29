@@ -1,0 +1,104 @@
+name: Build
+
+# - Every push to main and every pull request: builds Ordock.app (Apple Silicon + Intel).
+#   The download appears under "Artifacts" at the bottom of the run page (Actions tab).
+# - Push to main with a new version in Sources/Info.plist: creates the release vX.Y.Z with
+#   Ordock.zip attached (the README download button always points to the latest one).
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["**.md", "docs/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build (Apple Silicon + Intel)
+        run: |
+          mkdir -p build
+          for arch in arm64 x86_64; do
+            xcrun swiftc -O -swift-version 5 -parse-as-library \
+              -target "$arch-apple-macos13.0" \
+              Sources/main.swift \
+              -framework AppKit -framework SwiftUI -framework Carbon -framework CoreServices -framework ServiceManagement \
+              -o "build/Ordock-$arch"
+          done
+      - name: Create Ordock.app
+        run: |
+          APP=dist/Ordock.app
+          mkdir -p "$APP/Contents/MacOS" "$APP/Contents/Resources"
+          # One binary that runs on both Apple Silicon and Intel Macs
+          lipo -create -output "$APP/Contents/MacOS/Ordock" build/Ordock-arm64 build/Ordock-x86_64
+          cp Sources/Info.plist "$APP/Contents/Info.plist"
+          cp Sources/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"
+          # Ad-hoc signature (no Apple Developer account needed)
+          codesign --force --deep --sign - "$APP"
+          cd dist
+          # Fixed name, so the README link .../releases/latest/download/Ordock.zip always works
+          ditto -c -k --keepParent Ordock.app Ordock.zip
+          rm -rf Ordock.app
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ordock
+          path: dist/Ordock.zip
+
+  release:
+    needs: macos
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check version
+        id: v
+        run: |
+          VERSION=$(grep -A0 'CFBundleShortVersionString' Sources/Info.plist | sed -E 's/.*<string>([^<]+)<\/string>.*/\1/')
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if gh release view "v$VERSION" >/dev/null 2>&1; then
+            echo "new=false" >> "$GITHUB_OUTPUT"
+            echo "Release v$VERSION already exists: nothing to publish."
+          else
+            echo "new=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/download-artifact@v4
+        if: steps.v.outputs.new == 'true'
+        with:
+          name: Ordock
+          path: dist
+      - name: Release notes
+        if: steps.v.outputs.new == 'true'
+        run: |
+          VERSION=${{ steps.v.outputs.version }}
+          # The section of CHANGELOG.md for this version, then the download instructions
+          awk -v v="## $VERSION" '$0==v{f=1;next} /^## /{f=0} f' CHANGELOG.md > notes.md
+          cat >> notes.md <<'NOTES'
+
+          ### Download
+          **Ordock.zip** · macOS 13 Ventura or later, Apple Silicon and Intel
+
+          ### Install
+          1. Unzip **Ordock.zip** and drag **Ordock.app** into **Applications**.
+          2. The first time, right-click **Ordock.app** and choose **Open**
+             (on recent macOS: System Settings › Privacy & Security › **Open Anyway**).
+          3. Look for the Dock icon in the menu bar, next to the clock.
+
+          Upgrading from **Riordina Dock**? Delete the old app from Applications: Ordock picks up its backups automatically.
+
+          📖 Full guide and examples: [README](https://github.com/${{ github.repository }}#readme) · 🇮🇹 [Guida in italiano](https://github.com/${{ github.repository }}/blob/main/README.it.md)
+
+          ❤️ Like Ordock? [Buy me a coffee](https://paypal.me/mattdanieli) · Made With Love ❤️ by MattDanieli
+          NOTES
+      - uses: softprops/action-gh-release@v2
+        if: steps.v.outputs.new == 'true'
+        with:
+          tag_name: v${{ steps.v.outputs.version }}
+          name: Ordock ${{ steps.v.outputs.version }}
+          body_path: notes.md
+          files: dist/Ordock.zip

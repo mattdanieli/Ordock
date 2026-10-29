@@ -1,97 +1,175 @@
 <p align="center">
-  <img src="docs/icona.png" width="160" alt="Riordina Dock">
+  <img src="docs/icon.png" width="128" alt="Ordock icon">
 </p>
 
-<h1 align="center">Riordina Dock</h1>
+<h1 align="center">Ordock</h1>
+<p align="center"><b>Put your Mac's Dock in order, in one click.</b><br>
+Sort your Dock apps by name, color, last use or category, from the menu bar.</p>
 
 <p align="center">
-  <a href="#-italiano">🇮🇹 Italiano</a> · <a href="#-english">🇬🇧 English</a>
+  <a href="../../releases/latest/download/Ordock.zip"><img alt="Download for macOS" src="https://img.shields.io/badge/Download-macOS-111111?style=for-the-badge&logo=apple&logoColor=white"></a>
+</p>
+<p align="center"><sub>Free · Open source · macOS 13 Ventura or later (Apple Silicon &amp; Intel) · English &amp; Italiano · <a href="../../releases">All versions</a></sub></p>
+
+<p align="center">
+  <a href="README.md">🇬🇧 English</a> · <a href="README.it.md">🇮🇹 Italiano</a>
+</p>
+
+<p align="center">
+  <img src="docs/examples.png" alt="Examples: the Dock before, sorted by color and sorted by category" width="900">
 </p>
 
 ---
 
-## 🇮🇹 Italiano
+## The problem
 
-Ordina le app del Dock del Mac **per nome** o **per colore**, con un clic. E se non ti piace il risultato, torni all'ordine originale.
+Apps pile up in the Dock in the order you happened to add them. After a while, finding the right icon
+means scanning the whole row every time, and dragging icons around one by one to tidy up is tedious.
 
-### ✨ Cosa fa
+## The fix
 
-| Funzione | Descrizione |
+Ordock lives in the menu bar and rearranges the apps in your Dock for you: alphabetically, like a rainbow,
+by how recently you used them, or grouped by what they do. If you don't like the result, one click
+brings back your original order.
+
+## Features
+
+- **Sort by name:** A → Z, in one click
+- **Sort by color:** reads each icon and lines them up like a rainbow (reds → oranges → yellows →
+  greens → blues → purples), with gray, white and black icons at the end
+- **Sort by last used:** the apps you used most recently go first, on the **left** or on the **right**
+  of the Dock, your choice
+- **Sort by category:** groups your apps (Browsing, Mail, Socials, Design, Video, Music & audio, Work,
+  Development, Utilities, Fun, System, Other) with a small space between groups
+  - click a category to put it **first**, at the left of the Dock: the other groups follow
+  - common apps are recognized automatically; move any app to another group, create your own groups
+  - groups in **alphabetical** order, or drag them into your own order
+- **Saved orders:** save your Dock as "Work" or "Weekend" and bring it back with one click
+- **Dock clean-up:** finds the apps you haven't opened in 1, 3, 6 or 12 months (and apps that were
+  deleted from the Mac) and lets you choose which to remove from the Dock
+- **Keyboard shortcut:** **⌃⌥⌘ O** repeats your last sort, from any app (or ⌃⌥⌘ D / R, or off)
+- **Settings window** with every option in one place
+- **English and Italian:** choose while installing, switch anytime from the menu
+- **Safe by design:**
+  - your original Dock order is saved the first time you sort, and **Restore** brings it back
+  - if the backup can't be saved, the Dock is not touched
+  - restoring never removes apps you added later: they go to the end
+  - clean-up saves the current order first, so you can undo it from **Saved orders**
+  - apps are never deleted from your Mac: they only leave the Dock
+- **Native and light:** written in Swift, no internet connection, no account, no data collected
+
+## Download and install
+
+1. Download **[Ordock.zip](../../releases/latest/download/Ordock.zip)** and double-click it to unzip.
+2. Drag **Ordock.app** into your **Applications** folder.
+3. The first time, **right-click Ordock.app → Open**, then confirm.
+   On recent macOS versions you may need **System Settings → Privacy & Security → Open Anyway**.
+4. Look for the **Dock icon in the menu bar**, at the top right next to the clock.
+
+> **Why the warning?** Ordock is not notarized by Apple (that requires a paid developer account),
+> so macOS asks you to confirm the first time. The full source code is right here in this repository.
+
+## Quick start
+
+1. Click the Ordock icon in the menu bar.
+2. Choose **Sort by name**, **Sort by color**, **Sort by last used** or **Sort by category**.
+3. The Dock disappears and reappears for a second (that's how macOS reloads it) and your apps are in order.
+4. Changed your mind? **Restore original order**.
+
+## Guide
+
+### The menu
+
+| Menu item | What it does |
 |---|---|
-| 🔤 **Ordina per nome** | Mette le app in ordine alfabetico (A → Z) |
-| 🌈 **Ordina per colore** | Analizza le icone e le dispone come un arcobaleno: rossi → arancioni → gialli → verdi → blu → viola. Le icone grigie, bianche e nere vanno in fondo |
-| ↩️ **Ripristina ordine originale** | La prima volta che ordini, l'app salva com'era il Dock. Un clic e torna tutto come prima |
-| 💾 **Salva ordine attuale** | Imposta l'ordine di adesso come nuovo "originale" |
-| 🚀 **Apri all'avvio** | Si avvia da sola quando accendi il Mac |
+| **Sort by name (A → Z)** | Alphabetical order |
+| **Sort by color** | Rainbow order, neutral icons last |
+| **Sort by last used ›** | *Most recent on the left* or *Most recent on the right* |
+| **Sort by category › Put first in the Dock** | Click a category: its apps go first, the other groups follow |
+| **Sort by category › All in order, none first** | All groups in their order, no favorite |
+| **Sort by category › Change an app's category** | Pick an app, then its new group |
+| **Saved orders ›** | Apply, save or delete a named Dock layout |
+| **Clean up Dock ›** | Find apps unused for 1, 3, 6 or 12 months |
+| **Restore original order** | Puts the Dock back the way it was before your first sort |
+| **Save current order as original…** | Makes today's Dock the new "original" |
+| **Settings… (⌘ ,)** | Opens the settings window |
+| **Language ›** | Automatic, Italiano or English |
+| **Shortcut ›** | ⌃⌥⌘ O, D or R, or none |
 
-Vive nella **barra dei menu**, in alto vicino all'orologio. L'interfaccia è in italiano o in inglese in base alla lingua del Mac.
+### The settings window
 
-### 📥 Scarica l'app pronta
+- **General:** language, open at login, keyboard shortcut
+- **Sort:** one button for each way of sorting
+- **Categories:** on the left your groups with how many apps each one has (drag to reorder, **+** / **−**
+  to add or remove your own); on the right the apps of the selected group, with **Move to** and
+  **Add an app to this group**. Choose **Alphabetical** or **Custom** group order and whether to
+  leave spaces between groups
+- **Saved orders:** save, apply and delete your layouts
+- **Clean-up & restore:** Dock clean-up, restore the original order, open the backup folder
 
-Vai su **[Releases](../../releases/latest)**, scarica `RiordinaDock.zip` e trascina l'app in **Applicazioni**.
+### How "last used" works
 
-Al primo avvio macOS potrebbe bloccarla perché non è firmata da uno sviluppatore registrato: vai in **Impostazioni di Sistema → Privacy e sicurezza** e clicca **Apri comunque**.
+Ordock combines two sources: the date macOS records each time an app is opened, and its own note of
+every time you switch to an app while Ordock is running. The longer Ordock runs, the more accurate it gets.
+Apps never opened go to the end.
 
-### 🛠️ Compilare dal codice
+## Examples
 
-Serve **Xcode** e macOS 13 o successivo.
+**"I always look for my design apps first."**
+Sort by category › Put first: **Design**. Photoshop, Illustrator, Figma… sit at the left of the Dock,
+then Browsing, Mail, Music and the rest, each group separated by a small space.
 
-1. Scarica il progetto (**Code → Download ZIP**) ed estrailo
-2. Apri **Terminale**, scrivi `bash ` (con uno spazio), trascina dentro `Installa Riordina Dock.command` e premi **Invio**
+**"I want the apps I use right now close to the Finder."**
+Sort by last used › **Most recent on the left**. Press **⌃⌥⌘ O** whenever you want to refresh it.
 
-### 🛡️ Sicurezza e note
+**"My Dock should match my mood."**
+Sort by color for a rainbow Dock. Save it as **"Rainbow"** in Saved orders, then switch back to your
+**"Work"** layout with one click.
 
-- Non serve disattivare nessuna protezione di macOS
-- Se non riesce a salvare la copia di sicurezza, **non modifica il Dock**
-- Il ripristino non toglie mai app: quelle aggiunte dopo finiscono in fondo
-- Copia di emergenza in `~/Library/Application Support/Riordina Dock/`
-- Quando riordini, il Dock sparisce e riappare per un secondo: è normale
-- Vengono ordinate solo le app fisse (parte sinistra del Dock)
-- L'ordine per colore funziona meglio con lo stile icone **Predefinito** (Impostazioni di Sistema → Aspetto)
+**"My Dock is full of apps I never open."**
+Clean up Dock › **6 months**. Tick the apps you don't need and click **Remove from Dock**.
+The previous layout is saved as *"Before clean-up"*, just in case.
 
----
+**"I added a work app and it landed in Other."**
+Sort by category › Change an app's category › pick the app › **Work**. Ordock remembers it.
 
-## 🇬🇧 English
+## FAQ
 
-Sort your Mac's Dock apps **by name** or **by color** in one click. Don't like the result? Restore the original order.
+**Does Ordock delete apps?** No. It only changes the order of the icons in the Dock. Clean-up removes
+icons from the Dock, never the apps from your Mac.
 
-### ✨ Features
+**What gets sorted?** The apps pinned on the left side of the Dock. Folders, Downloads, the Trash and
+recent apps stay where they are.
 
-| Feature | Description |
-|---|---|
-| 🔤 **Sort by name** | Puts apps in alphabetical order (A → Z) |
-| 🌈 **Sort by color** | Analyzes each icon and arranges them like a rainbow: reds → oranges → yellows → greens → blues → purples. Gray, white and black icons go last |
-| ↩️ **Restore original order** | The first time you sort, the app saves your Dock's order. One click brings it back |
-| 💾 **Save current order** | Sets the current order as the new "original" |
-| 🚀 **Open at login** | Starts automatically when you turn on your Mac |
+**Sort by color puts everything together?** With the *Tinted* or *Clear* icon styles of
+System Settings → Appearance all icons share one color: use the *Default* style for the best result.
 
-It lives in the **menu bar**, next to the clock. The interface is in English or Italian depending on your Mac's language.
+**Where are the backups?** In `~/Library/Application Support/Ordock/`
+(Settings → Clean-up & restore → *Open the backup folder*).
 
-### 📥 Download the ready-made app
+**I used "Riordina Dock" before.** That was Ordock's previous name. The installer removes the old app
+and Ordock picks up its backups automatically.
 
-Go to **[Releases](../../releases/latest)**, download `RiordinaDock.zip` and drag the app into **Applications**.
+## Build from source
 
-On first launch macOS may block it because it isn't signed by a registered developer: open **System Settings → Privacy & Security** and click **Open Anyway**.
+Requires **Xcode** (or the Command Line Tools) and macOS 13 or later.
 
-### 🛠️ Build from source
+1. Download this repository (**Code → Download ZIP**) and unzip it.
+2. Open **Terminal**, type `bash ` (with a space), drag in **Install Ordock.command** and press **Return**.
+3. Choose the language: the app is built, copied to Applications and opened.
 
-Requires **Xcode** and macOS 13 or later.
+Every push to `main` builds the app automatically (see the **Actions** tab), and every new version is
+published under **[Releases](../../releases)** with `Ordock.zip` attached.
 
-1. Download the project (**Code → Download ZIP**) and unzip it
-2. Open **Terminal**, type `bash ` (with a space), drag in `Installa Riordina Dock.command` and press **Return**
+## Support
 
-### 🛡️ Safety and notes
+Ordock is free. If it makes your day a little tidier, you can buy me a coffee:
+**[paypal.me/mattdanieli](https://paypal.me/mattdanieli)** ❤️
 
-- No macOS security features need to be disabled
-- If the backup can't be saved, **the Dock is not changed**
-- Restoring never removes apps: apps added later go to the end
-- Emergency copy in `~/Library/Application Support/Riordina Dock/`
-- The Dock disappears and reappears for a second when sorting: that's normal
-- Only pinned apps are sorted (left side of the Dock)
-- Color sorting works best with the **Default** icon style (System Settings → Appearance)
+More apps: **[mattdanieli.it/apps](https://www.mattdanieli.it/apps/)**
 
----
-
-## 📄 Licenza / License
+## License
 
 [MIT](LICENSE)
+
+<p align="center"><sub>Made With Love ❤️ by MattDanieli</sub></p>
