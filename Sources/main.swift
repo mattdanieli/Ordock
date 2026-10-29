@@ -65,13 +65,13 @@ enum Dock {
         return value.map { Tile(raw: $0) }
     }
 
-    @discardableResult
+    /// Scrive il nuovo ordine e riavvia il Dock. Restituisce false (senza riavviare) se macOS non salva.
     static func write(_ tiles: [Tile]) -> Bool {
         let array = tiles.map { $0.raw } as NSArray
         CFPreferencesSetAppValue(appsKey, array, dockDomain)
-        let ok = CFPreferencesAppSynchronize(dockDomain)
+        guard CFPreferencesAppSynchronize(dockDomain) else { return false }
         restart()
-        return ok
+        return true
     }
 
     static func restart() {
@@ -343,7 +343,13 @@ enum Categories {
 
     /// Le categorie nell'ordine in cui finiscono nel Dock (da sinistra).
     static var order: [String] {
-        get { UserDefaults.standard.stringArray(forKey: orderKey) ?? builtIn.map { $0.key } }
+        get {
+            guard var list = UserDefaults.standard.stringArray(forKey: orderKey) else { return builtIn.map { $0.key } }
+            for b in builtIn where !list.contains(b.key) {
+                list.insert(b.key, at: list.firstIndex(of: fallback) ?? list.endIndex)
+            }
+            return list
+        }
         set { UserDefaults.standard.set(newValue, forKey: orderKey) }
     }
 
@@ -643,6 +649,8 @@ final class FlippedView: NSView {
 // MARK: - App nella barra dei menu
 
 let signature = "Made With Love ❤️ by MattDanieli"
+let bundleID = "com.mattdanieli.ordock"
+let showNotification = Notification.Name("com.mattdanieli.ordock.mostra")
 let donateURL = URL(string: "https://paypal.me/mattdanieli")!
 let websiteURL = URL(string: "https://www.mattdanieli.it/apps/")!
 
@@ -651,18 +659,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     private var statusItem: NSStatusItem!
     private var settingsWindow: NSWindow?
 
+    private var lastRun = Date.distantPast
+
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // Una sola Ordock alla volta: se è già aperta, le chiedo di mostrarsi e questa si chiude.
+        let me = ProcessInfo.processInfo.processIdentifier
+        let others = NSRunningApplication.runningApplications(withBundleIdentifier: Bundle.main.bundleIdentifier ?? bundleID)
+            .filter { $0.processIdentifier != me }
+        if !others.isEmpty {
+            DistributedNotificationCenter.default().postNotificationName(showNotification, object: nil,
+                                                                         userInfo: nil, deliverImmediately: true)
+            NSApp.terminate(nil)
+            return
+        }
+        DistributedNotificationCenter.default().addObserver(
+            self, selector: #selector(openSettings), name: showNotification, object: nil)
+
         Storage.migrateFromOldName()
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
-        if let button = statusItem.button {
-            if let image = NSImage(systemSymbolName: "dock.rectangle", accessibilityDescription: "Ordock") {
-                image.isTemplate = true
-                button.image = image
-            } else {
-                button.title = "Ordock"
-            }
-        }
+        statusItem.button?.image = menuBarIcon()
+        statusItem.button?.toolTip = "Ordock"
         let menu = NSMenu()
         menu.delegate = self
         menu.autoenablesItems = false
@@ -675,6 +692,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
         HotKey.onPress = { [weak self] in self?.run(Prefs.lastMethod) }
         _ = HotKey.register(Prefs.hotKey)
+    }
+
+    // Doppio clic sull'app già aperta: mostro le impostazioni invece di non fare nulla.
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        openSettings()
+        return false
+    }
+
+    /// L'icona della barra dei menu: il pinguino di Ordock, in bianco e nero (si adatta a chiaro e scuro).
+    private func menuBarIcon() -> NSImage {
+        let image = NSImage(size: NSSize(width: 18, height: 18), flipped: true) { _ in
+            NSColor.black.setFill()
+            // Musetto a doppia curva e pancia, come nell'icona dell'app
+            NSBezierPath(ovalIn: NSRect(x: 2.7, y: 2.4, width: 7.2, height: 7.2)).fill()
+            NSBezierPath(ovalIn: NSRect(x: 8.1, y: 2.4, width: 7.2, height: 7.2)).fill()
+            NSBezierPath(ovalIn: NSRect(x: 2.6, y: 7.2, width: 12.8, height: 16)).fill()
+            // Occhi, becco e Dock sulla pancia sono "ritagliati" nel corpo
+            NSGraphicsContext.current?.compositingOperation = .clear
+            NSBezierPath(ovalIn: NSRect(x: 5.3, y: 4.6, width: 2.4, height: 2.4)).fill()
+            NSBezierPath(ovalIn: NSRect(x: 10.3, y: 4.6, width: 2.4, height: 2.4)).fill()
+            let beak = NSBezierPath()
+            beak.move(to: NSPoint(x: 7.8, y: 8.2))
+            beak.line(to: NSPoint(x: 10.2, y: 8.2))
+            beak.line(to: NSPoint(x: 9, y: 10.4))
+            beak.close()
+            beak.fill()
+            for i in 0..<4 {
+                NSBezierPath(roundedRect: NSRect(x: 4.6 + Double(i) * 2.3, y: 12.6, width: 1.8, height: 1.8),
+                             xRadius: 0.5, yRadius: 0.5).fill()
+            }
+            return true
+        }
+        image.isTemplate = true
+        image.accessibilityDescription = "Ordock"
+        return image
     }
 
     @objc private func appActivated(_ note: Notification) {
@@ -930,9 +982,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func run(_ method: SortMethod) {
+        // Il Dock ci mette un attimo a ripartire: ignoro un secondo comando arrivato subito dopo.
+        guard Date().timeIntervalSince(lastRun) > 1.5 else { return }
         guard let tiles = prepare() else { return }
         Prefs.lastMethod = method
-        Dock.write(Sorter.sorted(tiles, by: method))
+        apply(Sorter.sorted(tiles, by: method))
+    }
+
+    /// Applica un nuovo Dock; se macOS non lo salva, avvisa invece di riavviare il Dock.
+    private func apply(_ tiles: [Tile]) {
+        lastRun = Date()
+        guard Dock.write(tiles) else {
+            alert(L("Non riesco a modificare il Dock", "Can't change the Dock"),
+                  L("macOS non ha salvato il nuovo ordine. Il Dock è rimasto com'era.",
+                    "macOS didn't save the new order. The Dock was left as it was."))
+            return
+        }
     }
 
     @objc private func sortByName() { run(.name) }
@@ -997,7 +1062,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
            !confirm(L("\"\(name)\" esiste già", "\"\(name)\" already exists"),
                     L("Vuoi sostituirlo con l'ordine di adesso?", "Replace it with the current order?"),
                     ok: L("Sostituisci", "Replace")) { return }
-        do { try SavedOrders.save(name, Dock.readTiles()) } catch {
+        guard let tiles = prepare() else { return }
+        do { try SavedOrders.save(name, tiles) } catch {
             alert(L("Salvataggio non riuscito", "Save failed"), error.localizedDescription)
         }
     }
@@ -1009,7 +1075,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     func applySaved(named name: String) {
         guard let order = SavedOrders.all().first(where: { $0.name == name }),
               prepare() != nil else { return }
-        Dock.write(Dock.arranged(like: order.tiles, addMissing: true))
+        apply(Dock.arranged(like: order.tiles, addMissing: true))
     }
 
     @objc private func deleteSavedItem(_ sender: NSMenuItem) {
@@ -1080,7 +1146,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
                   L("Per sicurezza non modifico il Dock.", "To be safe, the Dock was not changed.") + "\n\n\(error.localizedDescription)")
             return
         }
-        Dock.write(tiles.filter { !remove.contains($0.key) })
+        apply(tiles.filter { !remove.contains($0.key) })
     }
 
     @objc private func chooseHotKey(_ sender: NSMenuItem) {
@@ -1113,7 +1179,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
 
     @objc func restoreOriginal() {
         if let saved = Backup.loadTiles() {
-            Dock.write(Dock.arranged(like: saved, addMissing: false))
+            // Se il Dock non si legge, non scrivo nulla: rischierei di svuotarlo.
+            guard prepare() != nil else { return }
+            apply(Dock.arranged(like: saved, addMissing: false))
             return
         }
         guard let keys = Backup.loadKeys() else {
@@ -1132,7 +1200,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
             let pb = position[b.element.key] ?? Int.max
             return pa != pb ? pa < pb : a.offset < b.offset
         }.map { $0.element }
-        Dock.write(restored)
+        apply(restored)
     }
 
     @objc func saveCurrentAsOriginal() {

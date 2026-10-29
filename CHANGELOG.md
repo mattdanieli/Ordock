@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.1
+
+- **New icon:** the Ordock penguin, with the rainbow Dock on its belly
+- **Matching menu bar icon** in black and white, that adapts to light and dark mode
+- Ordock can no longer be opened twice: opening it again shows the settings window
+- If macOS doesn't save the new order, the Dock is left untouched and you get a message
+  (before, the Dock restarted anyway)
+- Pressing the shortcut several times in a row no longer restarts the Dock again and again
+- Restore never writes anything if the Dock can't be read
+- Empty saved orders can no longer be created
+- New built-in categories added in future versions also appear for people who reordered their groups
+
 ## 2.0.0
 
 **Riordina Dock is now Ordock**, with a new icon and many new ways to tidy up your Dock.
