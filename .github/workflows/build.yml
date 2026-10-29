@@ -60,7 +60,7 @@ jobs:
           symlinks = {"Applications": "/Applications"}
           icon = "Sources/AppIcon.icns"
           background = "dist/dmg-background.tiff"
-          window_rect = ((200, 160), (640, 400))
+          window_rect = ((200, 160), (640, 428))
           default_view = "icon-view"
           show_status_bar = False
           show_tab_view = False
@@ -75,25 +75,6 @@ jobs:
           EOF
           "$RUNNER_TEMP/dmg/bin/dmgbuild" -s dist/dmg-settings.py "Ordock" dist/Ordock.dmg
           hdiutil verify dist/Ordock.dmg
-      - name: Preview (welcome guide and installer window)
-        continue-on-error: true
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          mkdir -p preview
-          dist/Ordock.app/Contents/MacOS/Ordock --render-welcome "$PWD/preview"
-          hdiutil attach dist/Ordock.dmg -nobrowse -noautoopen
-          open /Volumes/Ordock
-          sleep 4
-          screencapture -x preview/dmg-window.png || true
-          hdiutil detach /Volumes/Ordock -force || true
-          ls -la preview
-          # Kept out of sight in a hidden ref (not a branch), only to look at the result
-          cd preview
-          git init -q
-          git add *.png
-          git -c user.name=ci -c user.email=ci@localhost commit -qm preview
-          git push -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}" HEAD:refs/preview/ordock
       - uses: actions/upload-artifact@v4
         with:
           name: Ordock
